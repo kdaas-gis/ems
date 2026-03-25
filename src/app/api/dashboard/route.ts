@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
-import { getDurationHours } from '@/lib/attendance';
+import { getDurationHours, getStartOfDay, getEndOfDay } from '@/lib/attendance';
 import { canViewTeamData } from '@/lib/roles';
 
 export async function GET() {
@@ -11,10 +11,8 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    const today = getStartOfDay();
+    const tomorrow = getEndOfDay();
     const canSeeTeamSnapshot = canViewTeamData(session.role);
 
     const [

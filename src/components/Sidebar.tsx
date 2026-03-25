@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { canAccessReports, canManageEmployees, canViewTeamData } from '@/lib/roles';
+import { canAccessReports, canViewTeamData } from '@/lib/roles';
 
 import { LayoutDashboard, Users, ClipboardList, CalendarCheck, Briefcase, FileText, User, LogOut, Building2, ListTodo } from 'lucide-react';
 

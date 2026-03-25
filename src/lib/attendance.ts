@@ -1,18 +1,27 @@
+/**
+ * Returns a Date at UTC midnight for the given input.
+ * For string inputs (YYYY-MM-DD), parses as UTC to match PostgreSQL DATE storage.
+ * For Date inputs, extracts the IST date and converts to UTC midnight.
+ */
 export function getStartOfDay(dateInput?: Date | string) {
-  const baseDate = dateInput
-    ? typeof dateInput === 'string'
-      ? new Date(`${dateInput}T00:00:00`)
-      : new Date(dateInput)
-    : new Date();
+  if (typeof dateInput === 'string') {
+    // "2026-03-25" → 2026-03-25T00:00:00Z (UTC midnight)
+    return new Date(`${dateInput}T00:00:00Z`);
+  }
 
-  baseDate.setHours(0, 0, 0, 0);
-  return baseDate;
+  // For Date objects (e.g. new Date()), get the IST date then produce UTC midnight
+  const d = dateInput ? new Date(dateInput) : new Date();
+  const istOffset = 5.5 * 60 * 60 * 1000; // IST = UTC+5:30
+  const istTime = new Date(d.getTime() + istOffset);
+  const yyyy = istTime.getUTCFullYear();
+  const mm = String(istTime.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(istTime.getUTCDate()).padStart(2, '0');
+  return new Date(`${yyyy}-${mm}-${dd}T00:00:00Z`);
 }
 
 export function getEndOfDay(dateInput?: Date | string) {
-  const nextDay = new Date(getStartOfDay(dateInput));
-  nextDay.setDate(nextDay.getDate() + 1);
-  return nextDay;
+  const start = getStartOfDay(dateInput);
+  return new Date(start.getTime() + 24 * 60 * 60 * 1000);
 }
 
 export function getDurationHours(checkIn?: string | Date | null, checkOut?: string | Date | null) {

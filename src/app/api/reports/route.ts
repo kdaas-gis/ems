@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getLocalDateString } from '@/lib/date';
 import { getSession } from '@/lib/auth';
 import { canAccessReports } from '@/lib/roles';
+import { getStartOfDay, getEndOfDay } from '@/lib/attendance';
 import nodemailer from 'nodemailer';
 
 type ReportLog = {
@@ -82,14 +84,12 @@ export async function POST(request: NextRequest) {
     const { date, startDate, endDate, email, action } = await request.json();
     
     // Support both single date (legacy) and date range
-    const start = startDate || date || new Date().toISOString().split('T')[0];
+    const today = getLocalDateString();
+    const start = startDate || date || today;
     const end = endDate || start;
 
-    const dateStart = new Date(start);
-    dateStart.setHours(0, 0, 0, 0);
-    
-    const dateEnd = new Date(end);
-    dateEnd.setHours(23, 59, 59, 999);
+    const dateStart = getStartOfDay(start);
+    const dateEnd = getEndOfDay(end);
 
     const logs = await prisma.work_status.findMany({
       where: { 
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
         task: log.task,
         status: log.status,
         description: log.description,
-        work_date: log.work_date?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
+        work_date: log.work_date ? getLocalDateString(new Date(log.work_date)) : getLocalDateString(),
       }));
 
     const html = generateReportHTML(start === end ? start : `${start} to ${end}`, reportLogs);

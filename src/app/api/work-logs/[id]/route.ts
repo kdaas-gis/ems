@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { withAuditActor } from '@/lib/audit';
 import { canAssignWork } from '@/lib/roles';
+import { getStartOfDay } from '@/lib/attendance';
 
 export async function PUT(
   request: NextRequest,
@@ -32,10 +33,8 @@ export async function PUT(
       }
 
       // Restrict editing to the same day
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const logDate = new Date(existing.work_date || '');
-      logDate.setHours(0, 0, 0, 0);
+      const today = getStartOfDay();
+      const logDate = getStartOfDay(existing.work_date || new Date());
 
       if (logDate < today) {
         return NextResponse.json(
@@ -100,10 +99,8 @@ export async function DELETE(
       }
 
       // Restrict deletion to the same day
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const logDate = new Date(existing.work_date || '');
-      logDate.setHours(0, 0, 0, 0);
+      const today = getStartOfDay();
+      const logDate = getStartOfDay(existing.work_date || new Date());
 
       if (logDate < today) {
         return NextResponse.json(

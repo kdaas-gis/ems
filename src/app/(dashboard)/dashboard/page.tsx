@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Users, ClipboardList, Clock, Activity, CalendarCheck, LogIn, LogOut, Briefcase, ListTodo, ArrowRight } from 'lucide-react';
+import { Users, ClipboardList, Clock, Activity, CalendarCheck, Briefcase, ListTodo, ArrowRight } from 'lucide-react';
 import { apiFetch } from '@/lib/apiFetch';
 
 import { useEffect, useState } from 'react';
@@ -18,19 +18,6 @@ interface DashboardStats {
   activeProjects: number;
 }
 
-interface AttendanceRecord {
-  id: number;
-  attendance_date: string;
-  check_in: string | null;
-  check_out: string | null;
-  totalHours: number | null;
-}
-
-interface DashboardAttendance {
-  currentUserRecord: AttendanceRecord | null;
-  canCheckIn: boolean;
-  canCheckOut: boolean;
-}
 
 interface MyStats {
   todayLogs: number;
@@ -91,18 +78,6 @@ interface RecentLog {
   project?: { id: number; name: string; code: string } | null;
 }
 
-function formatTime(value: string | null) {
-  if (!value) return '—';
-  return new Date(value).toLocaleTimeString('en-IN', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-function formatHours(value: number | null) {
-  if (value === null) return '—';
-  return `${value.toFixed(1)}h`;
-}
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -112,17 +87,11 @@ export default function DashboardPage() {
   const [taskSummary, setTaskSummary] = useState<TaskSummary | null>(null);
   const [myTasks, setMyTasks] = useState<MyTask[]>([]);
   const [recentLogs, setRecentLogs] = useState<RecentLog[]>([]);
-  const [attendance, setAttendance] = useState<DashboardAttendance | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const [attendanceSubmitting, setAttendanceSubmitting] = useState(false);
-  const [attendanceMessage, setAttendanceMessage] = useState('');
-  const [attendanceError, setAttendanceError] = useState('');
-  const [attendanceLoading, setAttendanceLoading] = useState(true);
 
   useEffect(() => {
     fetchDashboard();
-    fetchAttendance();
   }, []);
 
   const fetchDashboard = async () => {
@@ -144,53 +113,6 @@ export default function DashboardPage() {
     }
   };
 
-  const fetchAttendance = async () => {
-    try {
-      const res = await apiFetch('/api/attendance');
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to load attendance');
-      }
-
-      setAttendance({
-        currentUserRecord: data.currentUserRecord ?? null,
-        canCheckIn: Boolean(data.canCheckIn),
-        canCheckOut: Boolean(data.canCheckOut),
-      });
-      setAttendanceError('');
-    } catch (err) {
-      setAttendanceError(err instanceof Error ? err.message : 'Failed to load attendance');
-    } finally {
-      setAttendanceLoading(false);
-    }
-  };
-
-  const handleAttendanceAction = async (action: 'check-in' | 'check-out') => {
-    setAttendanceSubmitting(true);
-    setAttendanceMessage('');
-    setAttendanceError('');
-
-    try {
-      const res = await apiFetch('/api/attendance', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Attendance action failed');
-      }
-
-      setAttendanceMessage(data.message);
-      await Promise.all([fetchDashboard(), fetchAttendance()]);
-    } catch (err) {
-      setAttendanceError(err instanceof Error ? err.message : 'Attendance action failed');
-    } finally {
-      setAttendanceSubmitting(false);
-    }
-  };
 
   const statCards = [
     {

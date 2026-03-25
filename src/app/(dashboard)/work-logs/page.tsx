@@ -1,6 +1,7 @@
 'use client';
 
-import { Plus, Edit2, Trash2, RotateCcw } from 'lucide-react';
+import { Plus, RotateCcw, Edit2, Trash2 } from 'lucide-react';
+import { getLocalDateString } from '@/lib/date';
 import { apiFetch } from '@/lib/apiFetch';
 
 import { useEffect, useState, useCallback } from 'react';
@@ -47,13 +48,13 @@ export default function WorkLogsPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingLog, setEditingLog] = useState<WorkLog | null>(null);
-  const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0]);
+  const [filterDate, setFilterDate] = useState(getLocalDateString());
   const [filterEmployee, setFilterEmployee] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterProject, setFilterProject] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [formData, setFormData] = useState({ employee_id: '', project_id: '', work_date: new Date().toISOString().split('T')[0], task: '', status: 'in-progress', description: '' });
+  const [formData, setFormData] = useState({ employee_id: '', project_id: '', work_date: getLocalDateString(), task: '', status: 'in-progress', description: '' });
   const canManageTeamLogs = canViewTeamData(user?.role);
   const canAssignTeamWork = canAssignWork(user?.role);
   const employeeOptions: SelectOption[] = employees.map((emp) => ({
@@ -104,7 +105,7 @@ export default function WorkLogsPage() {
   const openAdd = () => {
     setEditingLog(null);
     setError('');
-    setFormData({ employee_id: canAssignTeamWork ? '' : (user?.employee_id || ''), project_id: '', work_date: filterDate || new Date().toISOString().split('T')[0], task: '', status: 'in-progress', description: '' });
+    setFormData({ employee_id: canAssignTeamWork ? '' : (user?.employee_id || ''), project_id: '', work_date: filterDate || getLocalDateString(), task: '', status: 'in-progress', description: '' });
     setShowModal(true);
   };
 

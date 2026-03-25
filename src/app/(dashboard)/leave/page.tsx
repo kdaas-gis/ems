@@ -2,6 +2,7 @@
 
 import { CalendarDays, Check, Clock, Plus, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { getLocalDateString } from '@/lib/date';
 import { apiFetch } from '@/lib/apiFetch';
 import { useAuth } from '@/context/AuthContext';
 import Modal from '@/components/Modal';
@@ -71,8 +72,8 @@ export default function LeavePage() {
   const [adminCommentDraft, setAdminCommentDraft] = useState<Record<number, string>>({});
   const [formData, setFormData] = useState({
     leave_type: 'Casual',
-    start_date: new Date().toISOString().split('T')[0],
-    end_date: new Date().toISOString().split('T')[0],
+    start_date: getLocalDateString(),
+    end_date: getLocalDateString(),
     reason: '',
   });
   const employeeOptions: SelectOption[] = employees.map((employee) => ({
@@ -129,8 +130,8 @@ export default function LeavePage() {
     setEditingRequest(null);
     setFormData({
       leave_type: 'Casual',
-      start_date: new Date().toISOString().split('T')[0],
-      end_date: new Date().toISOString().split('T')[0],
+      start_date: getLocalDateString(),
+      end_date: getLocalDateString(),
       reason: '',
     });
     setError('');

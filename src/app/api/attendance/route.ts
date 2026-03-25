@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { withAuditActor } from '@/lib/audit';
 import { getDurationHours, getEndOfDay, getStartOfDay } from '@/lib/attendance';
+import { getLocalDateString } from '@/lib/date';
 import { canViewTeamData } from '@/lib/roles';
 
 export async function GET(request: NextRequest) {
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const date = searchParams.get('date') || new Date().toISOString().split('T')[0];
+    const date = searchParams.get('date') || getLocalDateString();
     const employeeId = searchParams.get('employee_id') || '';
     const startOfDay = getStartOfDay(date);
     const endOfDay = getEndOfDay(date);

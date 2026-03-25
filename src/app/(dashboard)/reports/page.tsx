@@ -2,6 +2,7 @@
 
 import { Mail, FileText, Loader2, Download, FileSpreadsheet } from 'lucide-react';
 import { apiFetch } from '@/lib/apiFetch';
+import { getLocalDateString } from '@/lib/date';
 import { useState } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -17,8 +18,8 @@ interface ReportLog {
 }
 
 export default function ReportsPage() {
-  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
-  const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [startDate, setStartDate] = useState(getLocalDateString());
+  const [endDate, setEndDate] = useState(getLocalDateString());
   const [email, setEmail] = useState('');
   const [previewHtml, setPreviewHtml] = useState('');
   const [logs, setLogs] = useState<ReportLog[]>([]);

@@ -2,6 +2,7 @@
 
 import { CalendarCheck, Clock3, LogIn, LogOut, RefreshCcw, UserCheck, History } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { getLocalDateString } from '@/lib/date';
 import { apiFetch } from '@/lib/apiFetch';
 import { useAuth } from '@/context/AuthContext';
 import AppSelect, { type SelectOption } from '@/components/AppSelect';
@@ -46,7 +47,7 @@ function formatHours(value: number | null) {
 
 export default function AttendancePage() {
   const { user } = useAuth();
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(getLocalDateString());
   const [employeeFilter, setEmployeeFilter] = useState('');
   const [employees, setEmployees] = useState<EmployeeOption[]>([]);
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
@@ -179,108 +180,108 @@ export default function AttendancePage() {
         </div>
 
         {!canViewTeamAttendance && (
-        <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm min-w-[320px]">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-blue-600 text-white flex items-center justify-center">
-              <CalendarCheck size={20} />
+          <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm min-w-[320px]">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-lg bg-blue-600 text-white flex items-center justify-center">
+                <CalendarCheck size={20} />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-slate-900">My Attendance</h2>
+                <p className="text-xs text-slate-500 font-medium">
+                  {new Date(date).toLocaleDateString('en-IN', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-sm font-bold text-slate-900">My Attendance</h2>
-              <p className="text-xs text-slate-500 font-medium">
-                {new Date(date).toLocaleDateString('en-IN', {
-                  weekday: 'long',
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric',
-                })}
-              </p>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-3 gap-3 mb-4 text-sm">
-            <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-3">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Check In</p>
-              <p className="font-bold text-slate-900">{formatTime(currentUserRecord?.check_in ?? null)}</p>
+            <div className="grid grid-cols-3 gap-3 mb-4 text-sm">
+              <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-3">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Check In</p>
+                <p className="font-bold text-slate-900">{formatTime(currentUserRecord?.check_in ?? null)}</p>
+              </div>
+              <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-3">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Check Out</p>
+                <p className="font-bold text-slate-900">{formatTime(currentUserRecord?.check_out ?? null)}</p>
+              </div>
+              <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-3">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Hours</p>
+                <p className="font-bold text-slate-900">{formatHours(currentUserRecord?.totalHours ?? null)}</p>
+              </div>
             </div>
-            <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-3">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Check Out</p>
-              <p className="font-bold text-slate-900">{formatTime(currentUserRecord?.check_out ?? null)}</p>
-            </div>
-            <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-3">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Hours</p>
-              <p className="font-bold text-slate-900">{formatHours(currentUserRecord?.totalHours ?? null)}</p>
-            </div>
-          </div>
 
-          <div className="flex gap-3">
-            <button
-              onClick={() => handleAttendanceAction('check-in')}
-              disabled={submitting || !canCheckIn}
-              className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              <LogIn size={16} />
-              Check In
-            </button>
-            <button
-              onClick={() => handleAttendanceAction('check-out')}
-              disabled={submitting || !canCheckOut}
-              className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-slate-900 text-white text-sm font-bold hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              <LogOut size={16} />
-              Check Out
-            </button>
-          </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleAttendanceAction('check-in')}
+                disabled={submitting || !canCheckIn}
+                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <LogIn size={16} />
+                Check In
+              </button>
+              <button
+                onClick={() => handleAttendanceAction('check-out')}
+                disabled={submitting || !canCheckOut}
+                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-slate-900 text-white text-sm font-bold hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <LogOut size={16} />
+                Check Out
+              </button>
+            </div>
 
-          {message && (
-            <div className="mt-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-medium">
-              {message}
-            </div>
-          )}
-          {error && (
-            <div className="mt-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm font-medium">
-              {error}
-            </div>
-          )}
-        </div>
+            {message && (
+              <div className="mt-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-medium">
+                {message}
+              </div>
+            )}
+            {error && (
+              <div className="mt-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm font-medium">
+                {error}
+              </div>
+            )}
+          </div>
         )}
       </div>
 
       {canViewTeamAttendance ? (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {statCards.map((card) => (
-          <div key={card.label} className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
-            <div className={`w-11 h-11 rounded-lg ${card.color} flex items-center justify-center text-white mb-4`}>
-              <card.icon size={22} />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {statCards.map((card) => (
+            <div key={card.label} className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+              <div className={`w-11 h-11 rounded-lg ${card.color} flex items-center justify-center text-white mb-4`}>
+                <card.icon size={22} />
+              </div>
+              <p className="text-3xl font-bold text-slate-900 mb-1">{card.value}</p>
+              <p className="text-sm font-semibold text-slate-500">{card.label}</p>
             </div>
-            <p className="text-3xl font-bold text-slate-900 mb-1">{card.value}</p>
-            <p className="text-sm font-semibold text-slate-500">{card.label}</p>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
       ) : (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
-          <div className="w-11 h-11 rounded-lg bg-blue-600 flex items-center justify-center text-white mb-4">
-            <CalendarCheck size={22} />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+            <div className="w-11 h-11 rounded-lg bg-blue-600 flex items-center justify-center text-white mb-4">
+              <CalendarCheck size={22} />
+            </div>
+            <p className="text-3xl font-bold text-slate-900 mb-1">{formatTime(currentUserRecord?.check_in ?? null)}</p>
+            <p className="text-sm font-semibold text-slate-500">Today&apos;s Check In</p>
           </div>
-          <p className="text-3xl font-bold text-slate-900 mb-1">{formatTime(currentUserRecord?.check_in ?? null)}</p>
-          <p className="text-sm font-semibold text-slate-500">Today&apos;s Check In</p>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
-          <div className="w-11 h-11 rounded-lg bg-slate-900 flex items-center justify-center text-white mb-4">
-            <LogOut size={22} />
+          <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+            <div className="w-11 h-11 rounded-lg bg-slate-900 flex items-center justify-center text-white mb-4">
+              <LogOut size={22} />
+            </div>
+            <p className="text-3xl font-bold text-slate-900 mb-1">{formatTime(currentUserRecord?.check_out ?? null)}</p>
+            <p className="text-sm font-semibold text-slate-500">Today&apos;s Check Out</p>
           </div>
-          <p className="text-3xl font-bold text-slate-900 mb-1">{formatTime(currentUserRecord?.check_out ?? null)}</p>
-          <p className="text-sm font-semibold text-slate-500">Today&apos;s Check Out</p>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
-          <div className="w-11 h-11 rounded-lg bg-emerald-600 flex items-center justify-center text-white mb-4">
-            <Clock3 size={22} />
+          <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+            <div className="w-11 h-11 rounded-lg bg-emerald-600 flex items-center justify-center text-white mb-4">
+              <Clock3 size={22} />
+            </div>
+            <p className="text-3xl font-bold text-slate-900 mb-1">{formatHours(currentUserRecord?.totalHours ?? null)}</p>
+            <p className="text-sm font-semibold text-slate-500">Hours for Selected Day</p>
           </div>
-          <p className="text-3xl font-bold text-slate-900 mb-1">{formatHours(currentUserRecord?.totalHours ?? null)}</p>
-          <p className="text-sm font-semibold text-slate-500">Hours for Selected Day</p>
         </div>
-      </div>
       )}
 
       <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6 shadow-sm flex flex-wrap gap-4 items-end">
@@ -315,7 +316,7 @@ export default function AttendancePage() {
 
         <button
           onClick={() => {
-            setDate(new Date().toISOString().split('T')[0]);
+            setDate(getLocalDateString());
             setEmployeeFilter('');
             setMessage('');
             setError('');
@@ -328,126 +329,12 @@ export default function AttendancePage() {
       </div>
 
       {canViewTeamAttendance ? (
-      <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-100 bg-slate-50/50">
-          <h2 className="text-lg font-bold text-slate-900">Daily Attendance Board</h2>
-          <p className="text-sm text-slate-500 font-medium mt-0.5">
-            {canViewTeamAttendance ? 'Monitor who is checked in, checked out, and still working.' : 'Your attendance record for the selected date.'}
-          </p>
-        </div>
-
-        {loading ? (
-          <div className="p-6">
-            <div className="skeleton h-10 w-full mb-3 rounded-lg" />
-            <div className="skeleton h-10 w-full mb-3 rounded-lg" />
-            <div className="skeleton h-10 w-full rounded-lg" />
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-slate-50/50 border-b border-slate-100">
-                  <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Employee</th>
-                  <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Check In</th>
-                  <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Check Out</th>
-                  <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Hours</th>
-                  <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {records.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
-                      No attendance records found for the selected date.
-                    </td>
-                  </tr>
-                ) : (
-                  records.map((record) => (
-                    <tr key={record.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded bg-blue-100 flex items-center justify-center text-blue-700 text-sm font-bold">
-                            {record.employee.name.charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <p className="text-sm font-bold text-slate-900">{record.employee.name}</p>
-                            <p className="text-xs text-slate-500 font-mono font-medium">{record.employee.employee_id}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm font-semibold text-slate-800">{formatTime(record.check_in)}</td>
-                      <td className="px-6 py-4 text-sm font-semibold text-slate-800">{formatTime(record.check_out)}</td>
-                      <td className="px-6 py-4 text-sm font-semibold text-slate-800">{formatHours(record.totalHours)}</td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${
-                            record.check_out
-                              ? 'bg-slate-100 text-slate-700 border-slate-200'
-                              : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                          }`}
-                        >
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full ${
-                              record.check_out ? 'bg-slate-600' : 'bg-emerald-600'
-                            }`}
-                          />
-                          {record.check_out ? 'Checked Out' : 'Working'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-      ) : (
-      <div className="grid grid-cols-1 xl:grid-cols-[0.95fr_1.05fr] gap-6">
-        <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-10 h-10 rounded-lg bg-slate-900 text-white flex items-center justify-center">
-              <CalendarCheck size={18} />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-slate-900">Selected Day</h2>
-              <p className="text-sm text-slate-500 font-medium">Your attendance details for {new Date(date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-4">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Check In</p>
-              <p className="text-lg font-bold text-slate-900">{formatTime(currentUserRecord?.check_in ?? null)}</p>
-            </div>
-            <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-4">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Check Out</p>
-              <p className="text-lg font-bold text-slate-900">{formatTime(currentUserRecord?.check_out ?? null)}</p>
-            </div>
-            <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-4">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Hours Worked</p>
-              <p className="text-lg font-bold text-slate-900">{formatHours(currentUserRecord?.totalHours ?? null)}</p>
-            </div>
-            <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-4">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Status</p>
-              <p className="text-lg font-bold text-slate-900">
-                {!currentUserRecord ? 'Not Checked In' : currentUserRecord.check_out ? 'Checked Out' : 'Working'}
-              </p>
-            </div>
-          </div>
-        </div>
-
         <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
           <div className="p-6 border-b border-slate-100 bg-slate-50/50">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-blue-600 text-white flex items-center justify-center">
-                <History size={18} />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-slate-900">My Attendance History</h2>
-                <p className="text-sm text-slate-500 font-medium mt-0.5">Review your own check-ins and hours by date</p>
-              </div>
-            </div>
+            <h2 className="text-lg font-bold text-slate-900">Daily Attendance Board</h2>
+            <p className="text-sm text-slate-500 font-medium mt-0.5">
+              {canViewTeamAttendance ? 'Monitor who is checked in, checked out, and still working.' : 'Your attendance record for the selected date.'}
+            </p>
           </div>
 
           {loading ? (
@@ -461,7 +348,7 @@ export default function AttendancePage() {
               <table className="w-full">
                 <thead>
                   <tr className="bg-slate-50/50 border-b border-slate-100">
-                    <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
+                    <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Employee</th>
                     <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Check In</th>
                     <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Check Out</th>
                     <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Hours</th>
@@ -478,24 +365,30 @@ export default function AttendancePage() {
                   ) : (
                     records.map((record) => (
                       <tr key={record.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-6 py-4 text-sm font-semibold text-slate-900">
-                          {record.attendance_date ? new Date(record.attendance_date).toLocaleDateString('en-IN') : '—'}
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded bg-blue-100 flex items-center justify-center text-blue-700 text-sm font-bold">
+                              {record.employee.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-slate-900">{record.employee.name}</p>
+                              <p className="text-xs text-slate-500 font-mono font-medium">{record.employee.employee_id}</p>
+                            </div>
+                          </div>
                         </td>
                         <td className="px-6 py-4 text-sm font-semibold text-slate-800">{formatTime(record.check_in)}</td>
                         <td className="px-6 py-4 text-sm font-semibold text-slate-800">{formatTime(record.check_out)}</td>
                         <td className="px-6 py-4 text-sm font-semibold text-slate-800">{formatHours(record.totalHours)}</td>
                         <td className="px-6 py-4">
                           <span
-                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${
-                              record.check_out
-                                ? 'bg-slate-100 text-slate-700 border-slate-200'
-                                : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                            }`}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${record.check_out
+                              ? 'bg-slate-100 text-slate-700 border-slate-200'
+                              : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              }`}
                           >
                             <span
-                              className={`w-1.5 h-1.5 rounded-full ${
-                                record.check_out ? 'bg-slate-600' : 'bg-emerald-600'
-                              }`}
+                              className={`w-1.5 h-1.5 rounded-full ${record.check_out ? 'bg-slate-600' : 'bg-emerald-600'
+                                }`}
                             />
                             {record.check_out ? 'Checked Out' : 'Working'}
                           </span>
@@ -508,7 +401,111 @@ export default function AttendancePage() {
             </div>
           )}
         </div>
-      </div>
+      ) : (
+        <div className="grid grid-cols-1 xl:grid-cols-[0.95fr_1.05fr] gap-6">
+          <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-lg bg-slate-900 text-white flex items-center justify-center">
+                <CalendarCheck size={18} />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">Selected Day</h2>
+                <p className="text-sm text-slate-500 font-medium">Your attendance details for {new Date(date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-4">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Check In</p>
+                <p className="text-lg font-bold text-slate-900">{formatTime(currentUserRecord?.check_in ?? null)}</p>
+              </div>
+              <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-4">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Check Out</p>
+                <p className="text-lg font-bold text-slate-900">{formatTime(currentUserRecord?.check_out ?? null)}</p>
+              </div>
+              <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-4">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Hours Worked</p>
+                <p className="text-lg font-bold text-slate-900">{formatHours(currentUserRecord?.totalHours ?? null)}</p>
+              </div>
+              <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-4">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Status</p>
+                <p className="text-lg font-bold text-slate-900">
+                  {!currentUserRecord ? 'Not Checked In' : currentUserRecord.check_out ? 'Checked Out' : 'Working'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-slate-100 bg-slate-50/50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-600 text-white flex items-center justify-center">
+                  <History size={18} />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">My Attendance History</h2>
+                  <p className="text-sm text-slate-500 font-medium mt-0.5">Review your own check-ins and hours by date</p>
+                </div>
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="p-6">
+                <div className="skeleton h-10 w-full mb-3 rounded-lg" />
+                <div className="skeleton h-10 w-full mb-3 rounded-lg" />
+                <div className="skeleton h-10 w-full rounded-lg" />
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-slate-50/50 border-b border-slate-100">
+                      <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
+                      <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Check In</th>
+                      <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Check Out</th>
+                      <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Hours</th>
+                      <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {records.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
+                          No attendance records found for the selected date.
+                        </td>
+                      </tr>
+                    ) : (
+                      records.map((record) => (
+                        <tr key={record.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="px-6 py-4 text-sm font-semibold text-slate-900">
+                            {record.attendance_date ? new Date(record.attendance_date).toLocaleDateString('en-IN') : '—'}
+                          </td>
+                          <td className="px-6 py-4 text-sm font-semibold text-slate-800">{formatTime(record.check_in)}</td>
+                          <td className="px-6 py-4 text-sm font-semibold text-slate-800">{formatTime(record.check_out)}</td>
+                          <td className="px-6 py-4 text-sm font-semibold text-slate-800">{formatHours(record.totalHours)}</td>
+                          <td className="px-6 py-4">
+                            <span
+                              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${record.check_out
+                                ? 'bg-slate-100 text-slate-700 border-slate-200'
+                                : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                }`}
+                            >
+                              <span
+                                className={`w-1.5 h-1.5 rounded-full ${record.check_out ? 'bg-slate-600' : 'bg-emerald-600'
+                                  }`}
+                              />
+                              {record.check_out ? 'Checked Out' : 'Working'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
