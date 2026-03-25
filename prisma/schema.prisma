@@ -1,0 +1,170 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model employees {
+  employee_id         String               @id @db.VarChar(10)
+  id                  Int                  @unique @default(autoincrement())
+  employee_code       String?              @unique @db.VarChar(30)
+  name                String
+  dob                 DateTime?            @db.Date
+  blood_type          String?              @db.VarChar(10)
+  designation         String?              @db.VarChar(100)
+  contact_num         String?              @db.VarChar(15)
+  email               String?
+  password            String?
+  role                String?              @default("employee") @db.VarChar(20)
+  work_status         work_status[]
+  created_tasks       task[]               @relation("TaskCreator")
+  task_assignments    task_assignment[]
+  attendance          attendance[]
+  leave_requests      leave_request[]
+  project_assignments project_assignment[]
+
+  @@index([role])
+  @@index([name])
+  @@index([designation])
+}
+
+model project {
+  id          Int           @id @default(autoincrement())
+  name        String
+  code        String        @unique @db.VarChar(20)
+  description String?
+  status      String        @default("active") @db.VarChar(20)
+  start_date  DateTime?     @db.Date
+  end_date    DateTime?     @db.Date
+  created_at  DateTime?     @default(now()) @db.Timestamp(6)
+  updated_at  DateTime?     @updatedAt @db.Timestamp(6)
+  work_logs   work_status[]
+  tasks       task[]
+  assignments project_assignment[]
+
+  @@index([status])
+  @@index([name])
+}
+
+model work_status {
+  id          Int        @id @default(autoincrement())
+  employee_id String?    @db.VarChar(10)
+  project_id  Int?
+  task_id     Int?
+  work_date   DateTime? @db.Date
+  task        String?
+  status      String?
+  description String?
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+  employee    employees? @relation(fields: [employee_id], references: [employee_id])
+  project     project?   @relation(fields: [project_id], references: [id])
+  assigned_task task?    @relation(fields: [task_id], references: [id])
+
+  @@index([employee_id, work_date])
+  @@index([project_id, work_date])
+  @@index([task_id, work_date])
+  @@index([status, work_date])
+  @@index([created_at])
+}
+
+model task {
+  id            Int               @id @default(autoincrement())
+  title         String
+  description   String?
+  project_id    Int?
+  created_by    String            @db.VarChar(10)
+  priority      String            @default("medium") @db.VarChar(20)
+  due_date      DateTime?         @db.Date
+  created_at    DateTime?         @default(now()) @db.Timestamp(6)
+  updated_at    DateTime?         @updatedAt @db.Timestamp(6)
+  project       project?          @relation(fields: [project_id], references: [id])
+  creator       employees         @relation("TaskCreator", fields: [created_by], references: [employee_id])
+  assignments   task_assignment[]
+  work_logs     work_status[]
+
+  @@index([project_id])
+  @@index([created_by])
+  @@index([due_date])
+  @@index([priority])
+  @@index([created_at])
+}
+
+model task_assignment {
+  id            Int       @id @default(autoincrement())
+  task_id        Int
+  employee_id    String    @db.VarChar(10)
+  status         String    @default("todo") @db.VarChar(20)
+  completed_at   DateTime? @db.Timestamp(6)
+  remarks        String?
+  created_at     DateTime? @default(now()) @db.Timestamp(6)
+  updated_at     DateTime? @updatedAt @db.Timestamp(6)
+  task           task      @relation(fields: [task_id], references: [id])
+  employee       employees @relation(fields: [employee_id], references: [employee_id])
+
+  @@unique([task_id, employee_id])
+  @@index([employee_id, status])
+  @@index([status, updated_at])
+  @@index([completed_at])
+}
+
+model attendance {
+  id              Int       @id @default(autoincrement())
+  employee_id     String    @db.VarChar(10)
+  attendance_date DateTime  @db.Date
+  check_in        DateTime? @db.Timestamp(6)
+  check_out       DateTime? @db.Timestamp(6)
+  created_at      DateTime? @default(now()) @db.Timestamp(6)
+  updated_at      DateTime? @updatedAt @db.Timestamp(6)
+  employee        employees @relation(fields: [employee_id], references: [employee_id])
+
+  @@unique([employee_id, attendance_date])
+  @@index([attendance_date])
+  @@index([employee_id, check_in])
+}
+
+model leave_request {
+  id            Int       @id @default(autoincrement())
+  employee_id   String    @db.VarChar(10)
+  leave_type    String    @db.VarChar(30)
+  start_date    DateTime  @db.Date
+  end_date      DateTime  @db.Date
+  reason        String?
+  status        String    @default("pending") @db.VarChar(20)
+  admin_comment String?
+  created_at    DateTime? @default(now()) @db.Timestamp(6)
+  updated_at    DateTime? @updatedAt @db.Timestamp(6)
+  employee      employees @relation(fields: [employee_id], references: [employee_id])
+
+  @@index([employee_id, status])
+  @@index([status, start_date])
+  @@index([created_at])
+}
+
+model project_assignment {
+  id          Int       @id @default(autoincrement())
+  project_id   Int
+  employee_id  String    @db.VarChar(10)
+  assigned_at  DateTime? @default(now()) @db.Timestamp(6)
+  project      project   @relation(fields: [project_id], references: [id])
+  employee     employees @relation(fields: [employee_id], references: [employee_id])
+
+  @@unique([project_id, employee_id])
+  @@index([employee_id])
+}
+
+model audit_log {
+  id                Int       @id @default(autoincrement())
+  table_name        String    @db.VarChar(50)
+  record_pk         String?   @db.VarChar(100)
+  operation         String    @db.VarChar(10)
+  actor_employee_id String?   @db.VarChar(10)
+  changed_at        DateTime  @default(now()) @db.Timestamp(6)
+  old_data          Json?
+  new_data          Json?
+
+  @@index([table_name, changed_at])
+  @@index([record_pk])
+  @@index([actor_employee_id])
+}
