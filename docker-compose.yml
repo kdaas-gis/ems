@@ -5,14 +5,16 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - DATABASE_URL=${DATABASE_URL}
     container_name: ems-app
     restart: unless-stopped
     # Direct port 3000 mapping removed; accessible via Nginx
     expose:
       - "3000"
     environment:
-      - DATABASE_URL=postgresql://webuser:StatuS123@192.168.0.137:5432/ems
-      - JWT_SECRET=gis-team-ems-secret-key-change-in-production-2024
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
       - SMTP_HOST=${SMTP_HOST:-}
       - SMTP_PORT=${SMTP_PORT:-587}
       - SMTP_USER=${SMTP_USER:-}

@@ -5,7 +5,8 @@ FROM base AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY prisma ./prisma
-ENV DATABASE_URL=postgresql://webuser:StatuS123@192.168.0.137:5432/ems
+ARG DATABASE_URL
+ENV DATABASE_URL=$DATABASE_URL
 RUN npm ci
 
 # Build
@@ -13,7 +14,8 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-ENV DATABASE_URL=postgresql://webuser:StatuS123@192.168.0.137:5432/ems
+ARG DATABASE_URL
+ENV DATABASE_URL=$DATABASE_URL
 RUN npx prisma generate
 RUN npm run build
 
