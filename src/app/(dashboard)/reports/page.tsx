@@ -1,9 +1,10 @@
 'use client';
 
-import { Mail, FileText, Loader2, Download, FileSpreadsheet } from 'lucide-react';
+import { Mail, FileText, Loader2, Download, FileSpreadsheet, CloudUpload } from 'lucide-react';
 import { apiFetch } from '@/lib/apiFetch';
 import { getLocalDateString } from '@/lib/date';
 import { useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -18,6 +19,8 @@ interface ReportLog {
 }
 
 export default function ReportsPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const [startDate, setStartDate] = useState(getLocalDateString());
   const [endDate, setEndDate] = useState(getLocalDateString());
   const [email, setEmail] = useState('');
@@ -25,6 +28,7 @@ export default function ReportsPage() {
   const [logs, setLogs] = useState<ReportLog[]>([]);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -57,6 +61,70 @@ export default function ReportsPage() {
       const data = await res.json();
       if (res.ok) { setMessage(data.message); } else { setError(data.error); }
     } catch { setError('Failed to send report'); } finally { setSending(false); }
+  };
+
+  const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbztlxz9DAn-jL8gHQsdu5Q11rVjrlVDtG-Z3yEGC8sraPiZb37gmOUhKLXHkCSYLMHW7w/exec';
+
+  const handleSyncToSheet = async () => {
+    if (logs.length === 0) {
+      setError('No data to sync. Please preview the report first.');
+      return;
+    }
+    setSyncing(true); setError(''); setMessage('');
+    console.log('[Google Sheet Sync] Starting sync for', logs.length, 'log entries');
+    console.log('[Google Sheet Sync] Target URL:', GOOGLE_SHEET_URL);
+
+    try {
+      let successCount = 0;
+      for (let i = 0; i < logs.length; i++) {
+        const log = logs[i];
+        const payload = {
+          date: log.work_date || '',
+          employee: `${log.employee.name} (${log.employee.employee_id})`,
+          task: log.task || '',
+          description: log.description || '-',
+          status: log.status === 'completed' ? 'Completed' : 'In Progress',
+        };
+
+        console.log(`[Google Sheet Sync] Sending entry ${i + 1}/${logs.length}:`, JSON.stringify(payload));
+
+        try {
+          const res = await fetch(GOOGLE_SHEET_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload),
+          });
+
+          console.log(`[Google Sheet Sync] Entry ${i + 1} response:`, {
+            status: res.status,
+            type: res.type,
+            ok: res.ok,
+            statusText: res.statusText,
+          });
+
+          // With no-cors, response is opaque (status=0, type=opaque) — this is expected
+          if (res.type === 'opaque' || res.ok) {
+            successCount++;
+            console.log(`[Google Sheet Sync] Entry ${i + 1} sent (opaque response — cannot verify server-side processing)`);
+          } else {
+            console.warn(`[Google Sheet Sync] Entry ${i + 1} unexpected response status: ${res.status}`);
+          }
+        } catch (fetchErr) {
+          console.error(`[Google Sheet Sync] Entry ${i + 1} FAILED:`, fetchErr);
+          throw fetchErr;
+        }
+      }
+
+      console.log(`[Google Sheet Sync] Sync complete. ${successCount}/${logs.length} entries sent.`);
+      console.log('[Google Sheet Sync] ⚠️ If entries do not appear in the sheet, ensure doPost() is a TOP-LEVEL function in your Apps Script (not nested inside myFunction).');
+      setMessage(`Synced ${successCount} entries to Google Sheet. If data doesn't appear, check the browser console for details.`);
+    } catch (err) {
+      console.error('[Google Sheet Sync] Sync failed with error:', err);
+      setError('Failed to sync data to Google Sheet. Check browser console (F12) for details.');
+    } finally {
+      setSyncing(false);
+    }
   };
 
   const generatePDF = () => {
@@ -183,6 +251,15 @@ export default function ReportsPage() {
 
           <hr className="border-slate-100 my-6" />
 
+          <button
+            onClick={handleSyncToSheet}
+            disabled={logs.length === 0 || syncing}
+            className="w-full py-3 mb-4 rounded-lg text-sm font-bold text-white bg-amber-500 hover:bg-amber-600 disabled:opacity-50 shadow-sm transition-colors flex items-center justify-center gap-2"
+          >
+            {syncing ? <Loader2 size={16} className="animate-spin" /> : <CloudUpload size={16} />}
+            {syncing ? 'Syncing...' : 'Update Work Status to Google Sheet'}
+          </button>
+
           <h3 className="text-sm font-bold text-slate-900 mb-3 uppercase tracking-wider">Download Options</h3>
           <div className="grid grid-cols-2 gap-3">
             <button
@@ -201,18 +278,22 @@ export default function ReportsPage() {
             </button>
           </div>
 
-          <hr className="border-slate-100 my-6" />
+          {isAdmin && (
+            <>
+              <hr className="border-slate-100 my-6" />
 
-          <h3 className="text-sm font-bold text-slate-900 mb-3 uppercase tracking-wider">Send via Email</h3>
-          <div className="space-y-3">
-            <div><label htmlFor="recipient-email" className="block text-sm font-bold text-slate-700 mb-1.5">Recipient Email</label><input id="recipient-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Leave blank to send to all team leads" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" /></div>
-            <button onClick={handleSend} disabled={sending} className="w-full py-3 rounded-lg text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 shadow-sm transition-colors flex items-center justify-center gap-2">
-              {sending ? <Loader2 size={16} className="animate-spin" /> : <Mail size={16} />}
-              {sending ? 'Sending...' : 'Send Report'}
-            </button>
-          </div>
-          {message && <div className="mt-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-medium">{message}</div>}
-          {error && <div className="mt-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm font-medium">{error}</div>}
+              <h3 className="text-sm font-bold text-slate-900 mb-3 uppercase tracking-wider">Send via Email</h3>
+              <div className="space-y-3">
+                <div><label htmlFor="recipient-email" className="block text-sm font-bold text-slate-700 mb-1.5">Recipient Email</label><input id="recipient-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Leave blank to send to all team leads" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" /></div>
+                <button onClick={handleSend} disabled={sending} className="w-full py-3 rounded-lg text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 shadow-sm transition-colors flex items-center justify-center gap-2">
+                  {sending ? <Loader2 size={16} className="animate-spin" /> : <Mail size={16} />}
+                  {sending ? 'Sending...' : 'Send Report'}
+                </button>
+              </div>
+              {message && <div className="mt-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-medium">{message}</div>}
+              {error && <div className="mt-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm font-medium">{error}</div>}
+            </>
+          )}
         </div>
 
         <div className="lg:col-span-2 bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
